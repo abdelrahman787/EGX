@@ -26,6 +26,12 @@
 
 ## التشغيل / Getting started
 
+### أسهل طريقة على Windows (بضغطة واحدة)
+اعمل **دبل-كليك** على ملف `start-windows.bat` — هيثبّت المكتبات لأول مرة، يشغّل السيرفر، ويفتح المتصفح تلقائيًا.
+(يتطلب تثبيت [Node.js LTS](https://nodejs.org) مرة واحدة قبلها.)
+
+### يدويًا (أي نظام)
+
 ```bash
 npm install
 cp .env.example .env      # ثم عدّل القيم  (على Windows PowerShell: copy .env.example .env)
