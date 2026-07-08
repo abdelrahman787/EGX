@@ -1,5 +1,6 @@
 import { api, fmt, toast, esc } from '../api.js';
 import { t, getLang } from '../i18n.js';
+import { confirmDialog } from '../components/modal.js';
 
 let filters = { type: '', symbol: '', from: '', to: '' };
 
@@ -133,6 +134,7 @@ async function openDetails(id, pageEl) {
     renderJournal(pageEl);
   };
   wrap.querySelector('#delEntry').onclick = async () => {
+    if (!(await confirmDialog({ message: t('common.deleteConfirm'), confirmLabel: t('common.delete') }))) return;
     await api.deleteJournal(id);
     close();
     renderJournal(pageEl);

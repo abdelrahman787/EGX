@@ -1,5 +1,6 @@
 import { api, fmt, toast, esc } from '../api.js';
 import { t, getLang } from '../i18n.js';
+import { modalShell, confirmDialog } from '../components/modal.js';
 
 export async function renderPortfolio(el) {
   el.innerHTML = `<div class="empty">…</div>`;
@@ -65,13 +66,21 @@ export async function renderPortfolio(el) {
     };
   });
   el.querySelectorAll('[data-del]').forEach((btn) => {
-    btn.onclick = async () => { await api.deleteStock(btn.dataset.del); renderPortfolio(el); };
+    btn.onclick = async () => {
+      if (!(await confirmDialog({ message: t('common.deleteConfirm'), confirmLabel: t('common.delete') }))) return;
+      await api.deleteStock(btn.dataset.del);
+      renderPortfolio(el);
+    };
   });
   el.querySelector('#addStock').onclick = () => openStockModal(el);
   el.querySelector('#addGoal').onclick = () => openGoalModal(el);
 
   el.querySelectorAll('[data-delgoal]').forEach((btn) => {
-    btn.onclick = async () => { await api.deleteGoal(btn.dataset.delgoal); renderPortfolio(el); };
+    btn.onclick = async () => {
+      if (!(await confirmDialog({ message: t('common.deleteConfirm'), confirmLabel: t('common.delete') }))) return;
+      await api.deleteGoal(btn.dataset.delgoal);
+      renderPortfolio(el);
+    };
   });
 
   function stockRow(s) {
@@ -107,17 +116,6 @@ function goalRow(g, lang) {
     <div class="progress"><span style="width:${pct}%"></span></div>
     ${g.note ? `<p class="muted" style="margin-top:6px">${esc(g.note)}</p>` : ''}
   </div>`;
-}
-
-function modalShell(bodyHtml, titleText) {
-  const wrap = document.createElement('div');
-  wrap.className = 'modal-overlay open';
-  wrap.innerHTML = `<div class="modal"><div class="modal-head"><h2>${titleText}</h2><button class="icon-btn" data-close>✕</button></div><div class="modal-body">${bodyHtml}</div></div>`;
-  document.body.appendChild(wrap);
-  const close = () => wrap.remove();
-  wrap.querySelector('[data-close]').onclick = close;
-  wrap.onclick = (e) => { if (e.target === wrap) close(); };
-  return { wrap, close };
 }
 
 function openStockModal(pageEl) {
