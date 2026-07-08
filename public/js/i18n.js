@@ -81,6 +81,9 @@ export const STRINGS = {
     'cl.selectIdentityFirst': 'اختر هويتك الاستثمارية أولًا.',
     'cl.savedOk': 'تم حفظ القرار في اليوميات وربطه بالمحفظة.',
     'cl.addToPortfolio': 'أضف/حدّث السهم في المحفظة أيضًا',
+    'cl.sellUpdatePortfolio': 'حدّث المحفظة عند تنفيذ البيع',
+    'cl.sellQtyPh': 'كمية البيع (اتركها فارغة = تصفية كاملة)',
+    'cl.sellLiquidateWarn': 'بدون تحديد كمية، سيتم تصفية كامل مركز هذا السهم من المحفظة.',
 
     // Portfolio
     'pf.title': 'المحفظة والأهداف',
@@ -224,6 +227,9 @@ export const STRINGS = {
     'cl.selectIdentityFirst': 'Select your investing identity first.',
     'cl.savedOk': 'Decision saved to the journal and linked to the portfolio.',
     'cl.addToPortfolio': 'Also add/update this stock in the portfolio',
+    'cl.sellUpdatePortfolio': 'Update the portfolio when this sell is executed',
+    'cl.sellQtyPh': 'Sell quantity (leave empty = full liquidation)',
+    'cl.sellLiquidateWarn': 'Without a quantity, the whole position in this stock will be liquidated from the portfolio.',
 
     'pf.title': 'Portfolio & Goals',
     'pf.holdings': 'Holdings',

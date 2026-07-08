@@ -141,6 +141,20 @@ export function renderChecklist(el) {
       </div>
     </div>
 
+    <!-- Sell → portfolio -->
+    <div class="card" id="sellCard" style="display:none">
+      <div class="check-item" style="margin:0">
+        <input type="checkbox" id="fSellFromPortfolio" checked>
+        <div class="ci-body">
+          <label class="ci-label" for="fSellFromPortfolio" style="margin:0; color:var(--text)">${t('cl.sellUpdatePortfolio')}</label>
+          <div class="ci-sub">
+            <input id="fSellQty" type="number" placeholder="${t('cl.sellQtyPh')}">
+            <div id="sellQtyWarn" style="margin-top:10px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- AI assistant -->
     <div class="card">
       <div class="card-title">🤖 ${t('cl.aiReview').replace('🤖 ','')}</div>
@@ -188,9 +202,13 @@ function wire(el, lang) {
     $('#dtSell').classList.toggle('secondary', dt !== 'sell');
     maybeSellWarn(el);
     $('#fAddPortfolio').closest('.card').style.display = dt === 'buy' ? '' : 'none';
+    $('#sellCard').style.display = dt === 'sell' ? '' : 'none';
+    updateSellQtyWarn(el);
   };
   $('#dtBuy').onclick = () => setDT('buy');
   $('#dtSell').onclick = () => setDT('sell');
+  $('#fSellQty').addEventListener('input', () => updateSellQtyWarn(el));
+  $('#fSellFromPortfolio').addEventListener('change', () => updateSellQtyWarn(el));
   setDT('buy');
 
   // position size calc (deterministic, local)
@@ -445,5 +463,21 @@ function buildPortfolioPayload(el, checklist) {
       sector: checklist.sector,
     };
   }
+
+  if (checklist.decision_type === 'sell' && $('#fSellFromPortfolio')?.checked) {
+    return { apply: true, quantity: $('#fSellQty').value };
+  }
   return null;
+}
+
+// Shows a clear warning when a sell has no quantity → full liquidation.
+function updateSellQtyWarn(el) {
+  const box = el.querySelector('#sellQtyWarn');
+  if (!box) return;
+  const on = el.querySelector('#fSellFromPortfolio')?.checked;
+  const qty = el.querySelector('#fSellQty')?.value;
+  box.innerHTML =
+    state.decision_type === 'sell' && on && !qty
+      ? `<div class="alert warn">⚠️ ${t('cl.sellLiquidateWarn')}</div>`
+      : '';
 }
