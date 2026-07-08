@@ -1,13 +1,14 @@
-import Database from 'better-sqlite3';
+import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DB_PATH = join(__dirname, '..', 'database.sqlite');
 
-const db = new Database(DB_PATH);
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+// Uses Node's built-in SQLite (node:sqlite) — no native compilation needed.
+const db = new DatabaseSync(DB_PATH);
+db.exec('PRAGMA journal_mode = WAL;');
+db.exec('PRAGMA foreign_keys = ON;');
 
 // ---- Schema ----------------------------------------------------------------
 

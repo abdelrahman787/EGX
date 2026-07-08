@@ -20,7 +20,7 @@
 ## البنية التقنية / Stack
 
 - **Backend**: Node.js + Express (ESM)
-- **Database**: SQLite via `better-sqlite3` (ملف واحد `database.sqlite`)
+- **Database**: SQLite via Node's built-in `node:sqlite` (ملف واحد `database.sqlite`) — لا يحتاج أي ترجمة/build tools. يتطلب **Node.js 22.5 أو أحدث**.
 - **Frontend**: Vanilla HTML/CSS/JS (بدون خطوة build) يُخدَّم من نفس السيرفر
 - **AI**: NaraRouter (OpenAI-compatible chat completions) — المفتاح في `.env` فقط، لا يصل للمتصفح أبدًا
 
@@ -28,11 +28,14 @@
 
 ```bash
 npm install
-cp .env.example .env      # ثم عدّل القيم
+cp .env.example .env      # ثم عدّل القيم  (على Windows PowerShell: copy .env.example .env)
 npm start
 ```
 
 ثم افتح: `http://localhost:3000`
+
+> **يتطلب Node.js 22.5 أو أحدث** (لأن قاعدة البيانات تستخدم `node:sqlite` المدمج). تأكد بـ `node --version`.
+> لا حاجة لأي Visual Studio أو أدوات بناء — لا توجد أي تبعيات native.
 
 ### متغيرات البيئة (.env)
 

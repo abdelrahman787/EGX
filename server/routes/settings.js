@@ -17,10 +17,15 @@ router.put('/', (req, res) => {
     `INSERT INTO settings (key, value) VALUES (?, ?)
      ON CONFLICT(key) DO UPDATE SET value = excluded.value`
   );
-  const txn = db.transaction((entries) => {
+  const entries = Object.entries(req.body || {});
+  db.exec('BEGIN');
+  try {
     for (const [key, value] of entries) upsert.run(key, String(value));
-  });
-  txn(Object.entries(req.body || {}));
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
 
   const rows = db.prepare('SELECT key, value FROM settings').all();
   const obj = {};
