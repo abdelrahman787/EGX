@@ -324,7 +324,10 @@ async function runAI(el) {
   }
 }
 
-async function runResearch(el) {
+// In-memory cache of research results for the whole session (name/symbol → result).
+const researchCache = new Map();
+
+async function runResearch(el, force = false) {
   const $ = (s) => el.querySelector(s);
   const lang = getLang();
   const box = $('#researchResult');
@@ -335,6 +338,17 @@ async function runResearch(el) {
 
   const priceInput = $('#rPrice').value;
   const peInput = $('#rPE').value;
+  const cacheKey = nameRaw.toLowerCase();
+
+  // Serve from cache unless the user explicitly re-searches.
+  if (!force && researchCache.has(cacheKey)) {
+    const c = researchCache.get(cacheKey);
+    fillFromResearch(el, c.data, c.priceInput, c.peInput);
+    box.innerHTML = renderResearchPanel(c.data, c.note, lang) + reSearchButton();
+    box.querySelector('#reSearchBtn').onclick = () => runResearch(el, true);
+    toast(t('cl.researchCached'), '');
+    return;
+  }
 
   btn.disabled = true;
   btn.innerHTML = `<span class="spinner"></span> ${t('cl.researchLoading')}`;
@@ -349,6 +363,7 @@ async function runResearch(el) {
     });
 
     if (res.data) {
+      researchCache.set(cacheKey, { data: res.data, note: res.note, priceInput, peInput });
       fillFromResearch(el, res.data, priceInput, peInput);
       box.innerHTML = renderResearchPanel(res.data, res.note, lang);
       toast(t('cl.researchFilled'), 'ok');
@@ -399,6 +414,10 @@ function fillFromResearch(el, d, priceInput, peInput) {
   if (!state.identity && d.identity && el.querySelector(`.identity-opt[data-id="${d.identity}"]`)) {
     el.querySelector(`.identity-opt[data-id="${d.identity}"]`).click();
   }
+}
+
+function reSearchButton() {
+  return `<button type="button" class="btn ghost small" id="reSearchBtn" style="margin-top:12px">${t('cl.reSearch')}</button>`;
 }
 
 function renderResearchPanel(d, note, lang) {
