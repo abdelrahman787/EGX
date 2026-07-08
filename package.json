@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node server/index.js",
-    "dev": "node --watch server/index.js"
+    "dev": "node --watch server/index.js",
+    "test": "node --test \"server/lib/__tests__/**/*.test.js\""
   },
   "keywords": [
     "stocks",
