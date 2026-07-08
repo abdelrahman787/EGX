@@ -403,6 +403,11 @@ async function submit(el) {
   if (!state.identity) { toast(t('cl.selectIdentityFirst'), 'err'); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
 
   const checklist = collect(el);
+
+  // Portfolio side-effect is applied transactionally by the backend (buy =
+  // weighted-average, sell = reduce/liquidate) — no separate frontend calls.
+  const portfolio = buildPortfolioPayload(el, checklist);
+
   try {
     const res = await api.createJournal({
       symbol: checklist.symbol,
@@ -410,22 +415,8 @@ async function submit(el) {
       decision_type: checklist.decision_type,
       identity: checklist.identity,
       checklist,
+      portfolio,
     });
-
-    // Optionally add/update the portfolio on a BUY.
-    if (checklist.decision_type === 'buy' && $('#fAddPortfolio').checked && checklist.symbol) {
-      const qty = Number($('#fQty').value) || 0;
-      const avg = Number($('#fAvg').value) || Number(checklist.current_price) || 0;
-      const { stocks } = await api.getStocks();
-      const existing = stocks.find((s) => s.symbol === checklist.symbol);
-      const payload = {
-        symbol: checklist.symbol, name: checklist.name, sector: checklist.sector,
-        quantity: qty, avg_price: avg, current_price: Number(checklist.current_price) || avg,
-        target_price: checklist.risk.target_price, stop_loss: checklist.risk.stop_loss_price,
-      };
-      if (existing) await api.updateStock(existing.id, payload);
-      else await api.createStock(payload);
-    }
 
     if (res.warning) {
       toast(res.warning[lang], 'err');
@@ -436,4 +427,23 @@ async function submit(el) {
   } catch (err) {
     toast(err.message, 'err');
   }
+}
+
+// Builds the optional portfolio payload sent with the journal entry.
+function buildPortfolioPayload(el, checklist) {
+  const $ = (s) => el.querySelector(s);
+  if (!checklist.symbol) return null;
+
+  if (checklist.decision_type === 'buy' && $('#fAddPortfolio')?.checked) {
+    return {
+      apply: true,
+      quantity: $('#fQty').value,
+      avg_price: $('#fAvg').value || checklist.current_price,
+      current_price: checklist.current_price,
+      target_price: checklist.risk.target_price,
+      stop_loss: checklist.risk.stop_loss_price,
+      sector: checklist.sector,
+    };
+  }
+  return null;
 }
