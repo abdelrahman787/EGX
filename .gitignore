@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Environment / secrets — NEVER commit the real API key
+.env
+.env.local
+
+# SQLite database (local personal data)
+database.sqlite
+database.sqlite-journal
+database.sqlite-wal
+database.sqlite-shm
+*.sqlite
+
+# Logs
+npm-debug.log*
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

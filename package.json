@@ -1,0 +1,28 @@
+{
+  "name": "thndr-companion",
+  "version": "1.0.0",
+  "description": "أداة اتخاذ قرار الاستثمار في الأسهم — Personal stock investment decision tool for Thndr traders (EGX)",
+  "main": "server/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "keywords": [
+    "stocks",
+    "egx",
+    "thndr",
+    "investment",
+    "decision-tool"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
