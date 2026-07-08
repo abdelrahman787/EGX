@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { buildResearchMessages, extractJson } from '../lib/researchPrompt.js';
+import { getNararouterConfig } from '../lib/nararouterConfig.js';
 
 const router = Router();
 
@@ -18,8 +19,8 @@ router.post('/', async (req, res) => {
     });
   }
 
-  const apiKey = process.env.NARAROUTER_API_KEY;
-  if (!apiKey || apiKey === 'your_nararouter_api_key_here') {
+  const { apiKey, configured, baseUrl, model } = getNararouterConfig();
+  if (!configured) {
     return res.status(400).json({
       error: {
         ar: 'وضع "حلّل الشركة" يحتاج مفتاح NARAROUTER_API_KEY في ملف .env.',
@@ -28,8 +29,6 @@ router.post('/', async (req, res) => {
     });
   }
 
-  const baseUrl = (process.env.NARAROUTER_BASE_URL || 'https://router.bynara.id/v1').replace(/\/$/, '');
-  const model = process.env.NARAROUTER_MODEL || 'mistral-medium-3-5';
   const messages = buildResearchMessages({ name, symbol, identity, currentPrice, peValue, sector, lang });
 
   try {

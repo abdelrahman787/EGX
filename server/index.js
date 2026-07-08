@@ -12,6 +12,7 @@ import settingsRouter from './routes/settings.js';
 import assistantRouter from './routes/assistant.js';
 import researchRouter from './routes/research.js';
 import backupRouter from './routes/backup.js';
+import { getNararouterConfig } from './lib/nararouterConfig.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -52,12 +53,7 @@ app.use('/api/research', researchRouter);
 app.use('/api', backupRouter);
 
 app.get('/api/health', (req, res) => {
-  res.json({
-    ok: true,
-    assistant_configured:
-      !!process.env.NARAROUTER_API_KEY &&
-      process.env.NARAROUTER_API_KEY !== 'your_nararouter_api_key_here',
-  });
+  res.json({ ok: true, assistant_configured: getNararouterConfig().configured });
 });
 
 // Serve the frontend (static, no build step).

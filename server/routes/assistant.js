@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { buildMessages } from '../lib/knowledgeBase.js';
 import { positionSize, identityConflict } from '../lib/deterministicChecks.js';
+import { getNararouterConfig } from '../lib/nararouterConfig.js';
 
 const router = Router();
 
@@ -29,8 +30,8 @@ router.post('/', async (req, res) => {
   }
 
   // ---- Layer 2: NaraRouter LLM (only on demand) ----------------------------
-  const apiKey = process.env.NARAROUTER_API_KEY;
-  if (!apiKey || apiKey === 'your_nararouter_api_key_here') {
+  const { apiKey, configured, baseUrl, model } = getNararouterConfig();
+  if (!configured) {
     return res.json({
       deterministic,
       ai: null,
@@ -41,8 +42,6 @@ router.post('/', async (req, res) => {
     });
   }
 
-  const baseUrl = (process.env.NARAROUTER_BASE_URL || 'https://api.nararouter.com/v1').replace(/\/$/, '');
-  const model = process.env.NARAROUTER_MODEL || 'tencent-hy3';
   const messages = buildMessages(checklist, question);
 
   try {
