@@ -5,12 +5,14 @@ import { renderDashboard } from './pages/dashboard.js';
 import { renderChecklist } from './pages/checklist.js';
 import { renderPortfolio } from './pages/portfolio.js';
 import { renderJournal } from './pages/journal.js';
+import { renderSettings } from './pages/settings.js';
 
 const ROUTES = {
   dashboard: { titleKey: 'nav.dashboard', icon: '🏠', render: renderDashboard },
   checklist: { titleKey: 'nav.checklist', icon: '✅', render: renderChecklist },
   portfolio: { titleKey: 'nav.portfolio', icon: '📊', render: renderPortfolio },
   journal: { titleKey: 'nav.journal', icon: '📓', render: renderJournal },
+  settings: { titleKey: 'nav.settings', icon: '⚙️', render: renderSettings },
 };
 
 let current = 'dashboard';

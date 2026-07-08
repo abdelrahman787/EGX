@@ -40,6 +40,10 @@ export const api = {
   getSettings: () => req('GET', '/api/settings'),
   saveSettings: (s) => req('PUT', '/api/settings', s),
 
+  // backup
+  exportData: () => req('GET', '/api/export'),
+  importData: (payload) => req('POST', '/api/import', payload),
+
   // assistant
   assistant: (payload) => req('POST', '/api/assistant', payload),
   research: (payload) => req('POST', '/api/research', payload),
