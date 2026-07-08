@@ -42,6 +42,7 @@ export const api = {
 
   // assistant
   assistant: (payload) => req('POST', '/api/assistant', payload),
+  research: (payload) => req('POST', '/api/research', payload),
   health: () => req('GET', '/api/health'),
 };
 

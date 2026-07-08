@@ -13,7 +13,7 @@ const CHECKS = [
   { id: 'financials', labelKey: 'cl.chkFinancials', tip: { ar: 'راجع آخر قائمة دخل وميزانية قبل القرار.', en: 'Review the latest income statement and balance sheet.' } },
   { id: 'pe', labelKey: 'cl.chkPE', field: 'pe_value', fieldKey: 'cl.peValue', tip: { ar: 'قارن P/E بمتوسط القطاع لا بالرقم المطلق.', en: 'Compare P/E to the sector average, not the absolute number.' } },
   { id: 'volatility', labelKey: 'cl.chkVolatility', tip: { ar: 'هل التقلب بسبب خبر/نتائج أم ضجيج سوق؟', en: 'Is the move driven by news/earnings or market noise?' } },
-  { id: 'support', labelKey: 'cl.chkSupport', field: 'support_level', fieldKey: 'cl.supportLevel', tip: { ar: 'حدد أقرب مستوى دعم ومقاومة حاليًا.', en: 'Identify the nearest current support & resistance.' } },
+  { id: 'support', labelKey: 'cl.chkSupport', field: 'support_level', fieldType: 'text', fieldKey: 'cl.supportLevel', tip: { ar: 'حدد أقرب مستوى دعم ومقاومة حاليًا.', en: 'Identify the nearest current support & resistance.' } },
 ];
 
 let state = {};
@@ -37,6 +37,19 @@ export function renderChecklist(el) {
   const L = (ar, en) => (lang === 'ar' ? ar : en);
 
   el.innerHTML = `
+    <!-- Auto research -->
+    <div class="card" style="border-color:var(--accent)">
+      <div class="card-title">${t('cl.research')}</div>
+      <p class="muted" style="margin-bottom:14px">${t('cl.researchHint')}</p>
+      <div class="field"><input id="rName" placeholder="${t('cl.researchNamePh')}"></div>
+      <div class="field-row">
+        <div class="field"><label>${t('cl.researchPrice')}</label><input id="rPrice" type="number" step="0.01"></div>
+        <div class="field"><label>${t('cl.researchPE')}</label><input id="rPE" type="number" step="0.01"></div>
+      </div>
+      <button type="button" class="btn accent" id="researchBtn">${t('cl.researchBtn')}</button>
+      <div id="researchResult" style="margin-top:14px"></div>
+    </div>
+
     <!-- Identity -->
     <div class="card">
       <div class="card-title">1️⃣ ${t('cl.identity')} <button class="btn ghost small" id="refIdentity" type="button">📚</button></div>
@@ -88,7 +101,7 @@ export function renderChecklist(el) {
               ${t(c.labelKey)}
               <span class="tip"><span class="tip-mark">i</span><span class="tip-text">${c.tip[lang]}</span></span>
             </label>
-            ${c.field ? `<div class="ci-sub"><input type="number" step="0.01" id="f_${c.field}" placeholder="${t(c.fieldKey)}"></div>` : ''}
+            ${c.field ? `<div class="ci-sub"><input type="${c.fieldType || 'number'}" ${c.fieldType === 'text' ? '' : 'step="0.01"'} id="f_${c.field}" placeholder="${t(c.fieldKey)}"></div>` : ''}
           </div>
         </div>`).join('')}
     </div>
@@ -152,6 +165,9 @@ function wire(el, lang) {
   // reference shortcuts
   $('#refIdentity').onclick = () => openReference('identity');
   $('#refCalc').onclick = () => openReference('calc');
+
+  // auto-research
+  $('#researchBtn').onclick = () => runResearch(el);
 
   // identity selection
   el.querySelectorAll('.identity-opt').forEach((opt) => {
@@ -288,6 +304,96 @@ async function runAI(el) {
     btn.disabled = false;
     btn.textContent = t('cl.aiReview');
   }
+}
+
+async function runResearch(el) {
+  const $ = (s) => el.querySelector(s);
+  const lang = getLang();
+  const box = $('#researchResult');
+  const btn = $('#researchBtn');
+
+  const nameRaw = $('#rName').value.trim();
+  if (!nameRaw) { toast(lang === 'ar' ? 'اكتب اسم أو رمز الشركة أولًا.' : 'Enter a company name or symbol first.', 'err'); return; }
+
+  const priceInput = $('#rPrice').value;
+  const peInput = $('#rPE').value;
+
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner"></span> ${t('cl.researchLoading')}`;
+  box.innerHTML = '';
+
+  try {
+    const res = await api.research({
+      name: nameRaw, symbol: nameRaw,
+      identity: state.identity,
+      currentPrice: priceInput, peValue: peInput,
+      sector: '', lang,
+    });
+
+    if (res.data) {
+      fillFromResearch(el, res.data, priceInput, peInput);
+      box.innerHTML = renderResearchPanel(res.data, res.note, lang);
+      toast(t('cl.researchFilled'), 'ok');
+    } else if (res.raw) {
+      box.innerHTML = `<div class="alert warn">${esc(res.note?.[lang] || '')}</div>
+        <div class="card" style="background:var(--bg-elev); margin-top:10px"><div class="ai-output">${esc(res.raw)}</div></div>`;
+    } else if (res.error) {
+      box.innerHTML = `<div class="alert danger">${esc(res.error[lang])}</div>`;
+    }
+  } catch (err) {
+    const e = err.data?.error?.[lang] || err.message;
+    box.innerHTML = `<div class="alert danger">${esc(e)}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = t('cl.researchBtn');
+  }
+}
+
+function setVal(el, sel, val) {
+  if (val === undefined || val === null || val === '') return;
+  const node = el.querySelector(sel);
+  if (node && !node.value) node.value = val; // don't overwrite what the user already typed
+}
+
+function fillFromResearch(el, d, priceInput, peInput) {
+  // Stock identity fields
+  setVal(el, '#fName', d.name);
+  setVal(el, '#fSymbol', (d.symbol || '').toUpperCase());
+  setVal(el, '#fSector', d.sector);
+  // Real number from the user takes priority; otherwise leave for them to fill.
+  if (priceInput) setVal(el, '#fPrice', priceInput);
+
+  setVal(el, '#fThesis', d.thesis);
+
+  const c = d.checks || {};
+  setVal(el, '#f_pe_value', peInput || c.pe_value);
+  setVal(el, '#f_support_level', c.support_resistance);
+
+  const r = d.risk || {};
+  setVal(el, '#fStopPrice', r.stop_loss_price);
+  setVal(el, '#fTarget', r.target_price);
+  setVal(el, '#fStopPct', r.stop_loss_pct);
+  setVal(el, '#fPortRisk', r.suggested_portfolio_risk_pct);
+
+  setVal(el, '#fBad', d.bad_scenario);
+
+  // Select identity if the model implies one and none is chosen yet.
+  if (!state.identity && d.identity && el.querySelector(`.identity-opt[data-id="${d.identity}"]`)) {
+    el.querySelector(`.identity-opt[data-id="${d.identity}"]`).click();
+  }
+}
+
+function renderResearchPanel(d, note, lang) {
+  const list = (arr) => (Array.isArray(arr) && arr.length)
+    ? `<ul style="margin:6px 0 0; padding-inline-start:18px">${arr.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`
+    : '';
+  let html = '';
+  if (note) html += `<div class="alert warn" style="margin-bottom:12px">${esc(note[lang])}</div>`;
+  if (d.summary) html += `<div class="alert info" style="margin-bottom:12px"><div><strong>${t('cl.aiSummary')}:</strong> ${esc(d.summary)}</div></div>`;
+  if (d.needs_verification?.length) html += `<div class="section-title" style="color:var(--amber)">${t('cl.needsVerify')}</div>${list(d.needs_verification)}`;
+  if (d.assumptions?.length) html += `<div class="section-title">${t('cl.assumptions')}</div>${list(d.assumptions)}`;
+  if (d.uncertainties?.length) html += `<div class="section-title">${t('cl.uncertainties')}</div>${list(d.uncertainties)}`;
+  return html;
 }
 
 async function submit(el) {

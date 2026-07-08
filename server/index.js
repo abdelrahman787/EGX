@@ -9,6 +9,7 @@ import journalRouter from './routes/journal.js';
 import goalsRouter from './routes/goals.js';
 import settingsRouter from './routes/settings.js';
 import assistantRouter from './routes/assistant.js';
+import researchRouter from './routes/research.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -22,6 +23,7 @@ app.use('/api/journal', journalRouter);
 app.use('/api/goals', goalsRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/assistant', assistantRouter);
+app.use('/api/research', researchRouter);
 
 app.get('/api/health', (req, res) => {
   res.json({
